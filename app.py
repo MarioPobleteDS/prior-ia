@@ -12,25 +12,7 @@ from google.generativeai.types import HarmCategory, HarmBlockThreshold
 st.set_page_config(layout="wide", page_title="PRIOR-IA")
 
 # --- 2. BARRA LATERAL CON CÓDIGO QR ---
-with st.sidebar:
-    st.header("📱 Pruébalo en Vivo")
-    
-    # TU URL REAL
-    url_app = "https://prior-ia-89rpjey9zwpxd4xkriedjd.streamlit.app/"
-    
-    # Generación del QR
-    qr = qrcode.QRCode(version=1, box_size=10, border=4)
-    qr.add_data(url_app)
-    qr.make(fit=True)
-    img = qr.make_image(fill_color="black", back_color="white")
-    
-    # Mostrar QR
-    img_byte_arr = io.BytesIO()
-    img.save(img_byte_arr, format='PNG')
-    st.image(img_byte_arr, caption="Escanea aquí", use_container_width=True)
-    
-    st.divider()
-    st.info("Desarrollado por el Equipo Hackatón Hospital Padre Hurtado")
+
 
 # --- 3. CONFIGURACIÓN DEL CEREBRO (IA) ---
 try:
@@ -87,61 +69,6 @@ st.subheader("Prototipo cálculo IRC - Salud a la vanguardIA - Hospital Padre Hu
 # ==========================================
 # MODO 1: CONSULTA INDIVIDUAL
 # ==========================================
-st.header("1. Herramienta de Consulta Individual (Clínico)")
-
-col1, col2 = st.columns(2)
-
-with col1:
-    st.subheader("Describa aquí la condición y/o historial clínico del paciente:")
-    resumen_paciente = st.text_area(
-        "", 
-        placeholder="Ej: Paciente de 82 años, hipertenso, operado del corazón hace 3 semanas. Acude por dificultad respiratoria...",
-        height=300 
-    )
-    calcular_btn = st.button("Calcular IRC Individual", use_container_width=True)
-
-if calcular_btn: 
-    if resumen_paciente: 
-        with st.spinner("Analizando paciente y calculando IRC..."):
-            try:
-                # Llamada a la función
-                data = get_irc_from_ia(resumen_paciente)
-                
-                score_val = int(data["score"])
-                nivel_val = data["nivel"]
-                justificacion_lista = data["justificacion"]
-                
-                # Formato HTML para lista
-                justificacion_html = "<ul>" + "".join(f"<li>{item}</li>" for item in justificacion_lista) + "</ul>"
-                
-                with col2:
-                    st.subheader("Resultados del Análisis")
-                    with st.container(border=True):
-                        st.success("✅ Análisis Completado")
-                        
-                        if score_val >= 90:
-                            st.metric(label="IRC Score", value=score_val, delta=nivel_val)
-                            st.error("⚠️ RIESGO CRÍTICO - Prioridad Máxima")
-                        elif score_val >= 70:
-                            st.metric(label="IRC Score", value=score_val, delta=nivel_val)
-                            st.warning("🟧 RIESGO ALTO - Prioridad Alta")
-                        elif score_val >= 40:
-                            st.metric(label="IRC Score", value=score_val, delta=nivel_val)
-                            st.info("🟦 RIESGO MEDIO - Prioridad Media")
-                        else:
-                            st.metric(label="IRC Score", value=score_val, delta=nivel_val)
-                            st.success("🟩 RIESGO BAJO - Control Rutina")
-                        
-                        st.divider()
-                        st.markdown("**Justificación Clínica (IA):**")
-                        st.markdown(justificacion_html, unsafe_allow_html=True)
-
-            except Exception as e:
-                st.error(f"Error al llamar a la IA: {e}")
-    else:
-        st.warning("⚠️ Por favor, ingrese el resumen del paciente.")
-
-st.divider()
 
 # ==========================================
 # MODO 2: PROCESAMIENTO MASIVO (ACTUALIZADO)
