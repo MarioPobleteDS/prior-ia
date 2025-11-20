@@ -76,7 +76,7 @@ st.subheader("Prototipo cálculo IRC - Salud a la vanguardIA - Hospital Padre Hu
 st.header("Herramienta de Procesamiento Masivo (Datos para aprendizaje de ML e integracion a sistema Hospitalario)")
 st.info("Procesamiento por lotes con priorización inteligente.")
 
-if st.button("Procesar Archivo Completo de Pacientes"):
+if st.button("Procesar Episodios Clinicos de Pacientes"):
     
     # Lógica de lectura de archivo robusta
     file_path_xlsx = "casos_pacientes.xlsx"
