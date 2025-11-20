@@ -3,13 +3,12 @@ import google.generativeai as genai
 import pandas as pd
 import json
 import re
-import time
 import qrcode
 from PIL import Image
 import io
 from google.generativeai.types import HarmCategory, HarmBlockThreshold
 
-# --- 1. CONFIGURACIÓN DE PÁGINA (OBLIGATORIO AL INICIO) ---
+# --- 1. CONFIGURACIÓN DE PÁGINA ---
 st.set_page_config(layout="wide", page_title="PRIOR-IA")
 
 # --- 2. BARRA LATERAL CON CÓDIGO QR ---
@@ -83,9 +82,11 @@ def get_irc_from_ia(texto_paciente):
 # --- 5. INTERFAZ PRINCIPAL ---
 
 st.title("PRIOR-IA: Índice de Riesgo Clínico (IRC)")
-st.subheader("Prototipo calculo IRC Salud a la vanguardIA Hospital Padre Hurtado")
+st.subheader("Prototipo cálculo IRC - Salud a la vanguardIA - Hospital Padre Hurtado")
 
-# --- MODO 1: CONSULTA INDIVIDUAL ---
+# ==========================================
+# MODO 1: CONSULTA INDIVIDUAL
+# ==========================================
 st.header("1. Herramienta de Consulta Individual (Clínico)")
 
 col1, col2 = st.columns(2)
@@ -142,9 +143,11 @@ if calcular_btn:
 
 st.divider()
 
-# --- MODO 2: PROCESAMIENTO MASIVO ---
+# ==========================================
+# MODO 2: PROCESAMIENTO MASIVO (ACTUALIZADO)
+# ==========================================
 st.header("2. Herramienta de Procesamiento Masivo (Gestión)")
-st.info("Procesamiento por lotes desde archivo Excel/CSV local.")
+st.info("Procesamiento por lotes con priorización inteligente.")
 
 if st.button("Procesar Archivo Completo de Pacientes"):
     
@@ -169,21 +172,22 @@ if st.button("Procesar Archivo Completo de Pacientes"):
 
     df = df.fillna('N/A')
     
-    # Normalización de columnas (Mayúsculas y sin espacios)
+    # Normalización de columnas
     df.columns = df.columns.str.upper().str.strip()
     
-    # Verificación de columnas
     req_cols = ['ID', 'DEMOGRAFÍA', 'PABELLÓN', 'FARMACIA', 'EVENTOS ADVERSOS', 
                 'INDICACIÓN MÉDICA', 'HOSPITALIZACIÓN', 'ATENCIÓN AMBULATORIA', 
                 'LISTA DE ESPERA CONSULTA NUEVA']
     
     missing = [c for c in req_cols if c not in df.columns]
     if missing:
-        st.error(f"Faltan columnas en el Excel (verifique tildes): {missing}")
+        st.error(f"Faltan columnas en el Excel: {missing}")
         st.stop()
     
     results_list = []
     progress_bar = st.progress(0, text="Iniciando motor de IA...")
+    
+    total_rows = len(df)
     
     for index, row in df.iterrows():
         # Construcción del prompt masivo
@@ -208,12 +212,37 @@ if st.button("Procesar Archivo Completo de Pacientes"):
                 'Justificación (IA)': " | ".join(data["justificacion"])
             })
         except Exception as e:
-            results_list.append({'ID': row['ID'], 'IRC (Score)': -1, 'Justificación (IA)': f"Error: {e}"})
+            results_list.append({'ID': row['ID'], 'IRC (Score)': -1, 'Nivel de Riesgo': 'Error', 'Justificación (IA)': f"Error: {e}"})
         
-        progress_bar.progress((index + 1) / len(df), text=f"Procesando ID: {row['ID']}")
+        progress_bar.progress((index + 1) / total_rows, text=f"Procesando ID: {row['ID']}")
 
     progress_bar.empty()
     st.success("¡Procesamiento completado!")
     
-    # Mostrar tabla full ancho
-    st.dataframe(pd.DataFrame(results_list), use_container_width=True)
+    # --- ORDENAR Y COLOREAR ---
+    
+    # 1. Crear DataFrame
+    df_results = pd.DataFrame(results_list)
+    
+    # 2. Ordenar de MAYOR A MENOR Riesgo (Lo más grave arriba)
+    df_results = df_results.sort_values(by='IRC (Score)', ascending=False)
+    
+    # 3. Función Semáforo
+    def color_risk(val):
+        if isinstance(val, int):
+            if val >= 90:
+                return 'background-color: #ff4b4b; color: white; font-weight: bold;' # Rojo
+            elif val >= 70:
+                return 'background-color: #ffa500; color: black; font-weight: bold;' # Naranja
+            elif val >= 40:
+                return 'background-color: #8ecae6; color: black; font-weight: bold;' # Azul
+            elif val >= 0:
+                return 'background-color: #90ee90; color: black; font-weight: bold;' # Verde
+        return ''
+
+    # 4. Mostrar Tabla con Estilos
+    st.dataframe(
+        df_results.style.map(color_risk, subset=['IRC (Score)']),
+        use_container_width=True,
+        hide_index=True
+    )
