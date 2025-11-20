@@ -73,7 +73,7 @@ st.subheader("Prototipo cálculo IRC - Salud a la vanguardIA - Hospital Padre Hu
 # ==========================================
 # MODO 2: PROCESAMIENTO MASIVO (ACTUALIZADO)
 # ==========================================
-st.header("2. Herramienta de Procesamiento Masivo (Gestión)")
+st.header("Herramienta de Procesamiento Masivo (Datos para aprendizaje de ML e integracion a sistema Hospitalario)")
 st.info("Procesamiento por lotes con priorización inteligente.")
 
 if st.button("Procesar Archivo Completo de Pacientes"):
